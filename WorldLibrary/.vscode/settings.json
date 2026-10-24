@@ -8,6 +8,7 @@
         "UIDropDownMenu_AddButton",
         "UIDropDownMenu_CreateInfo",
         "StaticPopupDialogs",
-        "StaticPopup_Show"
+        "StaticPopup_Show",
+        "UISpecialFrames"
     ]
 }
