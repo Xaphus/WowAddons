@@ -107,17 +107,6 @@ local function SaveCurrentPage(title, pageText, pageNum)
     print("|cFF00FF00[Book]|r Recorded page " .. pageNum .. " for " .. title)
 end
 
---   2. In BuildBookLibraryUI replace the entire `f.RefreshList = function() ... end`
---      body with:
---
---          f.RefreshList = function() PopulateBookList(scrollContent) end
---
---   3. Delete `local readerPopup = nil` and `local currentPageNum = 1` (unused now).
---
---   If any other file still calls CreateReaderPopup(title, book), add this shim:
---          CreateReaderPopup = WorldLibrary.OpenBook
--- ============================================================================
-
 local CASCADE_STEP  = 28   -- pixel offset between newly opened readers
 local CASCADE_SLOTS = 8    -- offsets wrap after this many so windows stay on screen
 
