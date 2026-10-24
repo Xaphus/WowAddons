@@ -1,4 +1,4 @@
-## Interface: 16001
+## Interface: 16001, 120100
 ## Title: WorldLibrary
 ## Notes: Records the title and full text of opened books into a unique database.
 ## SavedVariablesPerCharacter: BookDB
