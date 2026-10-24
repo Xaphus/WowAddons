@@ -6,9 +6,6 @@ local libraryFrame = nil
 local selectedTitle = nil
 local currentTitle = nil
 local BookDB = {}
-BookDB.customCategories = { "Uncategorized", "Lore", "History", "Quests" }
-
-local selectedCategory = "All"
 
 local FONT_SIZES = {
     { label = "Small",  size = 12 },
@@ -94,8 +91,7 @@ local function SaveBookTitleAndLocation()
         BookDB[title] = {
             pages = {},
             timestamp = date("%Y-%m-%d %H:%M:%S"),
-            location = locationStr,
-            category = "Uncategorized"
+            location = locationStr
         }
         print("|cFF00FF00[Book]|r Recording new book: " .. title)
     end
@@ -212,70 +208,8 @@ function WorldLibrary.BuildBookLibraryUI()
     sidebarTitle:SetPoint("TOPLEFT", sidebar, "TOPLEFT", 10, -10)
     sidebarTitle:SetText("Books")
 
-    -- Category Filter Button
-    local catBtn = CreateFrame("Button", nil, sidebar, "UIPanelButtonTemplate")
-    catBtn:SetSize(220, 20)
-    catBtn:SetPoint("TOPLEFT", sidebar, "TOPLEFT", 10, -30)
-    catBtn:SetText("Category: " .. selectedCategory)
-    
-    local categoryMenu = CreateFrame("Frame", "BookLibraryCategoryMenu", sidebar, "UIDropDownMenuTemplate")
-    catBtn:SetScript("OnClick", function()
-        UIDropDownMenu_Initialize(categoryMenu, function(self, level)
-            local allInfo = UIDropDownMenu_CreateInfo()
-            allInfo.text = "All Categories"
-            allInfo.value = "All"
-            allInfo.func = function(btn)
-                selectedCategory = btn.value
-                catBtn:SetText("Category: All")
-                if libraryFrame and libraryFrame.RefreshList then libraryFrame.RefreshList() end
-            end
-            UIDropDownMenu_AddButton(allInfo)
-
-            if BookDB and BookDB.customCategories then
-                for _, cat in ipairs(BookDB.customCategories) do
-                    local catInfo = UIDropDownMenu_CreateInfo()
-                    catInfo.text = cat
-                    catInfo.value = cat
-                    catInfo.func = function(btn)
-                        selectedCategory = btn.value
-                        catBtn:SetText("Category: " .. cat)
-                        if libraryFrame and libraryFrame.RefreshList then libraryFrame.RefreshList() end
-                    end
-                    UIDropDownMenu_AddButton(catInfo)
-                end
-            end
-
-            -- Add option to create a new category
-            local addInfo = UIDropDownMenu_CreateInfo()
-            addInfo.text = "|cFF00FF00+ Add Category...|r"
-            addInfo.notCheckable = true
-            addInfo.func = function()
-                StaticPopupDialogs["BOOK_LIBRARY_ADD_CATEGORY"] = {
-                    text = "Enter new category name:",
-                    button1 = "Accept",
-                    button2 = "Cancel",
-                    hasEditBox = true,
-                    OnAccept = function(dialogSelf)
-                        local text = dialogSelf.editBox:GetText()
-                        if text and text ~= "" then
-                            BookDB.customCategories = BookDB.customCategories or {}
-                            table.insert(BookDB.customCategories, text)
-                            print("|cFF00FF00[Book]|r Added category: " .. text)
-                        end
-                    end,
-                    timeout = 0,
-                    whileDead = true,
-                    hideOnEscape = true,
-                }
-                StaticPopup_Show("BOOK_LIBRARY_ADD_CATEGORY")
-            end
-            UIDropDownMenu_AddButton(addInfo)
-        end)
-        ToggleDropDownMenu(1, nil, categoryMenu, catBtn, 0, 0)
-    end)
-
     local scrollFrame = CreateFrame("ScrollFrame", "BookLibraryListScroll", sidebar, "UIPanelScrollFrameTemplate")
-    scrollFrame:SetPoint("TOPLEFT", sidebar, "TOPLEFT", 8, -56)
+    scrollFrame:SetPoint("TOPLEFT", sidebar, "TOPLEFT", 8, -34)
     scrollFrame:SetPoint("BOTTOMRIGHT", sidebar, "BOTTOMRIGHT", -28, 10)
 
     local scrollContent = CreateFrame("Frame", nil, scrollFrame)
@@ -348,67 +282,40 @@ function WorldLibrary.BuildBookLibraryUI()
         local previousButton = nil
         local totalHeight = 0
 
-        for titleKey, bookData in pairs(BookDB) do
-            if titleKey ~= "fontSizeIndex" and titleKey ~= "customCategories" and type(bookData) == "table" then
-                local bookCategory = bookData.category or "Uncategorized"
+        for titleKey, _ in pairs(BookDB) do
+            if titleKey ~= "fontSizeIndex" then
+                local titleCaptured = titleKey
+                local btn = CreateFrame("Button", nil, scrollContent)
+                btn:SetSize(186, buttonHeight)
 
-                if selectedCategory == "All" or bookCategory == selectedCategory then
-                    local titleCaptured = titleKey
-                    local btn = CreateFrame("Button", nil, scrollContent)
-                    btn:SetSize(186, buttonHeight)
-
-                    if not previousButton then
-                        btn:SetPoint("TOPLEFT", scrollContent, "TOPLEFT", 0, -4)
-                        totalHeight = totalHeight + 4
-                    else
-                        btn:SetPoint("TOPLEFT", previousButton, "BOTTOMLEFT", 0, -6)
-                        totalHeight = totalHeight + 6
-                    end
-
-                    local btnText = btn:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-                    btnText:SetPoint("LEFT", btn, "LEFT", 4, 0)
-                    btnText:SetWidth(178)
-                    btnText:SetJustifyH("LEFT")
-                    
-                    local fontFile, _, fontFlags = btnText:GetFont()
-                    if fontFile then
-                        btnText:SetFont(fontFile, sidebarSize, fontFlags)
-                    end
-
-                    btnText:SetText("|cFF808080•|r " .. titleCaptured)
-
-                    btn:RegisterForClicks("LeftButtonUp", "RightButtonUp")
-                    btn:SetScript("OnClick", function(self, button)
-                        if button == "LeftButton" then
-                            selectedTitle = titleCaptured
-                            UpdateBookView()
-                        elseif button == "RightButton" then
-                            local bookMenu = CreateFrame("Frame", "BookItemContextMenu", UIParent, "UIDropDownMenuTemplate")
-                            UIDropDownMenu_Initialize(bookMenu, function(self, level)
-                                local titleInfo = UIDropDownMenu_CreateInfo()
-                                titleInfo.text = "Set Category for: " .. titleCaptured
-                                titleInfo.isTitle = true
-                                UIDropDownMenu_AddButton(titleInfo)
-
-                                for _, cat in ipairs(BookDB.customCategories or {}) do
-                                    local catInfo = UIDropDownMenu_CreateInfo()
-                                    catInfo.text = cat
-                                    catInfo.checked = (bookCategory == cat)
-                                    catInfo.func = function()
-                                        BookDB[titleCaptured].category = cat
-                                        if libraryFrame and libraryFrame.RefreshList then libraryFrame.RefreshList() end
-                                    end
-                                    UIDropDownMenu_AddButton(catInfo)
-                                end
-                            end, "MENU")
-                            ToggleDropDownMenu(1, nil, bookMenu, self, 0, 0)
-                        end
-                    end)
-
-                    table.insert(scrollContent.buttons, btn)
-                    previousButton = btn
-                    totalHeight = totalHeight + buttonHeight
+                if not previousButton then
+                    btn:SetPoint("TOPLEFT", scrollContent, "TOPLEFT", 0, -4)
+                    totalHeight = totalHeight + 4
+                else
+                    btn:SetPoint("TOPLEFT", previousButton, "BOTTOMLEFT", 0, -6)
+                    totalHeight = totalHeight + 6
                 end
+
+                local btnText = btn:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+                btnText:SetPoint("LEFT", btn, "LEFT", 4, 0)
+                btnText:SetWidth(178)
+                btnText:SetJustifyH("LEFT")
+                
+                local fontFile, _, fontFlags = btnText:GetFont()
+                if fontFile then
+                    btnText:SetFont(fontFile, sidebarSize, fontFlags)
+                end
+
+                btnText:SetText("|cFF808080•|r " .. titleCaptured)
+
+                btn:SetScript("OnClick", function()
+                    selectedTitle = titleCaptured
+                    UpdateBookView()
+                end)
+
+                table.insert(scrollContent.buttons, btn)
+                previousButton = btn
+                totalHeight = totalHeight + buttonHeight
             end
         end
         scrollContent:SetHeight(math.max(totalHeight + 10, 440))
@@ -427,12 +334,12 @@ local eventFrame = CreateFrame("Frame", "BookEventFrame")
 
 local function OnEvent(self, event, addonName)
     if event == "ADDON_LOADED" and addonName == "WorldLibrary" then
+        -- Do not use magic global variables in the code
         if not _G.BookDB then
             _G.BookDB = BookDB
         else 
             BookDB = _G.BookDB
         end 
-        BookDB.customCategories = BookDB.customCategories or { "Uncategorized", "Lore", "History", "Quests" }
         WorldLibrary.db = BookDB
     elseif event == "ITEM_TEXT_BEGIN" then
         currentTitle = SaveBookTitleAndLocation()

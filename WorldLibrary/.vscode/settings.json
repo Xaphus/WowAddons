@@ -2,14 +2,6 @@
     "Lua.diagnostics.globals": [
         "SlashCmdList",
         "SelectGossipOption",
-        "GossipFrame",
-        "UIDropDownMenu_Initialize",
-        "UIDropDownMenu_SetSelectedValue",
-        "UIDropDownMenu_SetText",
-        "ToggleDropDownMenu",
-        "UIDropDownMenu_AddButton",
-        "UIDropDownMenu_CreateInfo",
-        "StaticPopupDialogs",
-        "StaticPopup_Show"
+        "GossipFrame"
     ]
 }
