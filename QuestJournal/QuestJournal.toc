@@ -1,0 +1,8 @@
+## Interface: 16001
+## Title: QuestJournal
+## Notes: Logs quest details, multipage text, locations, NPCs, and triggered dialogue.
+## Author: Custom
+## Version: 1.0.0
+## SavedVariablesPerCharacter: QuestJournalDB
+
+QuestJournal.lua
