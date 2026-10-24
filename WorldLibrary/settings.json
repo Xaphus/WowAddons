@@ -1,8 +1,8 @@
 {
   "Lua.diagnostics.globals": [
-    "WorldRecorder",
+    "WorldLibrary",
     "Book",
-    "SlashCmdList",
+    "SlashCmdList"
   ],
   "Lua.workspace.checkThirdParty": false
 }
