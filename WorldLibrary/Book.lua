@@ -431,8 +431,7 @@ local function OnEvent(self, event, addonName)
             _G.BookDB = BookDB
         else 
             BookDB = _G.BookDB
-        end 
-        BookDB.customCategories = BookDB.customCategories or { "Uncategorized", "Lore", "History", "Quests" }
+        end
         WorldLibrary.db = BookDB
     elseif event == "ITEM_TEXT_BEGIN" then
         currentTitle = SaveBookTitleAndLocation()
