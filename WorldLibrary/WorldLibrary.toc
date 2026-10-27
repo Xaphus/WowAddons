@@ -3,5 +3,13 @@
 ## Notes: Records the title and full text of opened books into a unique database.
 ## SavedVariables: BookDB
 
-Book.lua
+Core.lua
+Database.lua
+Book.Record.lua
+Category.lua
+Category.Editor.lua
+Book.Reader.lua
+Book.List.lua
+Library.Frame.lua
+Events.lua
 SlashCommands.lua
