@@ -9,7 +9,7 @@
         "command": "xcopy",
         "args": [
             ".",
-            "C:\\Program Files (x86)\\World of Warcraft\\_retail_\\Interface\\AddOns\\WorldLibrary",
+            "C:\\Program Files (x86)\\World of Warcraft\\_classic_era_\\Interface\\AddOns\\WorldLibrary",
             "/Y", // force overwrite
             "/R", // overwrite readonly files
         ],

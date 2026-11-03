@@ -17,6 +17,10 @@ function WL.NewDefaultCategories()
     return { WL.DEFAULT_CATEGORY, "Lore", "History", "Quests" }
 end
 
+-- Labels for Bindings.xml (Options > Keybindings > AddOns > WorldLibrary)
+BINDING_HEADER_WORLDLIBRARY = "WorldLibrary"
+BINDING_NAME_WORLDLIBRARY_TOGGLE = "Toggle Library"
+
 -- ---------------------------------------------------------------------------
 -- Runtime state (not saved between sessions)
 -- ---------------------------------------------------------------------------

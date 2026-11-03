@@ -1,0 +1,5 @@
+<Bindings>
+    <Binding name="WORLDLIBRARY_TOGGLE" header="WORLDLIBRARY">
+        WorldLibrary.ToggleLibrary()
+    </Binding>
+</Bindings>
