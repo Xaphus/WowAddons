@@ -141,13 +141,14 @@ local function BuildReaderFrame()
     f.Body = body
 
     scroll:EnableMouseWheel(true)
-    scroll:SetScript("OnMouseWheel", function(self, delta)
-        local newScroll = self:GetVerticalScroll() - (delta * 30)
-        local maxScroll = self:GetVerticalScrollRange()
+    local function ScrollBy(delta)   -- delta > 0 scrolls up, like the mouse wheel
+        local newScroll = scroll:GetVerticalScroll() - (delta * 30)
+        local maxScroll = scroll:GetVerticalScrollRange()
         if newScroll < 0 then newScroll = 0 end
         if newScroll > maxScroll then newScroll = maxScroll end
-        self:SetVerticalScroll(newScroll)
-    end)
+        scroll:SetVerticalScroll(newScroll)
+    end
+    scroll:SetScript("OnMouseWheel", function(_, delta) ScrollBy(delta) end)
 
     -- Fixed image area: same width and left edge as the text column, sits above
     -- the scroll frame. Hidden (and the text column full height) on pages with no images.
@@ -274,6 +275,24 @@ local function BuildReaderFrame()
         end
     end)
 
+    -- Gamepad: LB/RB or D-pad left/right turn pages, D-pad up/down scroll the
+    -- text, B closes. Everything else passes through to the game.
+    if f.EnableGamePadButton then   -- not present on every client version
+        f:EnableGamePadButton(true)
+        f:SetScript("OnGamePadButtonDown", function(self, button)
+            local handled = true
+            if     button == "PADRSHOULDER" or button == "PADDRIGHT" then
+                if nextButton:IsEnabled() then nextButton:Click() end
+            elseif button == "PADLSHOULDER" or button == "PADDLEFT" then
+                if prevButton:IsEnabled() then prevButton:Click() end
+            elseif button == "PADDDOWN" then ScrollBy(-3)
+            elseif button == "PADDUP"   then ScrollBy(3)
+            elseif button == "PAD2"     then self:Hide()
+            else handled = false end
+            self:SetPropagateKeyboardInput(not handled)
+        end)
+    end
+
     -- Release on any explicit Hide(). The IsShown() check ignores the case where
     -- the frame is only invisible because UIParent was hidden (Alt+Z), so books
     -- don't get closed when the player toggles the UI.
@@ -326,6 +345,10 @@ function WL.OpenBook(bookKey, book)
     f:Show()
     f:Raise()
     return f
+end
+
+function WL.HasOpenBooks()
+    return next(openReaders) ~= nil
 end
 
 function WL.CloseBook(bookKey)

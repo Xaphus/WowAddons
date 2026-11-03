@@ -37,6 +37,39 @@ local function InitCategoryMenu(catBtn)
     UIDropDownMenu_AddButton(editInfo)
 end
 
+function WL.ToggleLibrary()
+    local f = WL.BuildBookLibraryUI()
+    if f:IsShown() then
+        f:Hide()
+    else
+        f:RefreshList()
+        f:Show()
+    end
+end
+
+-- Gamepad: D-pad up/down moves through the list, A opens, X opens the book's
+-- menu, LB/RB (or Y) change the category filter, B closes. Unhandled buttons
+-- are passed through so the character can still be controlled.
+local function OnLibraryPadButton(self, button)
+    -- A reader window on top gets the buttons first (it has its own bindings)
+    if WL.HasOpenBooks() then
+        self:SetPropagateKeyboardInput(true)
+        return
+    end
+
+    local handled = true
+    if     button == "PADDDOWN"      then WL.MoveListSelection(1)
+    elseif button == "PADDUP"        then WL.MoveListSelection(-1)
+    elseif button == "PAD1"          then WL.OpenSelectedBook()
+    elseif button == "PAD3"          then WL.OpenSelectedBookMenu()
+    elseif button == "PADRSHOULDER"
+        or button == "PAD4"          then WL.CycleCategory(1)
+    elseif button == "PADLSHOULDER"  then WL.CycleCategory(-1)
+    elseif button == "PAD2"          then self:Hide()
+    else handled = false end
+    self:SetPropagateKeyboardInput(not handled)
+end
+
 function WL.BuildBookLibraryUI()
     if WL.state.libraryFrame then return WL.state.libraryFrame end
 
@@ -53,6 +86,11 @@ function WL.BuildBookLibraryUI()
         f.TitleText:SetText("Library Collection")
     end
     f:Hide()
+
+    if f.EnableGamePadButton then   -- not present on every client version
+        f:EnableGamePadButton(true)
+        f:SetScript("OnGamePadButtonDown", OnLibraryPadButton)
+    end
 
     -- Category filter button + dropdown
     local catBtn = CreateFrame("Button", nil, f, "UIPanelButtonTemplate")

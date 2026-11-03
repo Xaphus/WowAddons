@@ -2,6 +2,7 @@
 ## Title: WorldLibrary
 ## Notes: Records the title and full text of opened books into a unique database.
 ## SavedVariables: BookDB
+## IconTexture: Interface\Icons\INV_Misc_Book_09
 
 Core.lua
 Database.lua

@@ -7,6 +7,10 @@ local WL = WorldLibrary
 
 local bookMenu = nil    -- the single shared right-click menu frame
 
+local listContent = nil     -- scroll child holding the pooled buttons (set on populate)
+local listCount = 0         -- number of books currently shown
+local selectedIndex = 0     -- gamepad cursor position in the list (0 = none)
+
 -- ---------------------------------------------------------------------------
 -- Right-click context menu (one frame, created on first use)
 -- ---------------------------------------------------------------------------
@@ -85,6 +89,13 @@ local function CreateListButton(parent)
     text:SetJustifyV("TOP")
     text:SetWordWrap(true)
     btn.text = text
+
+    -- Gamepad selection marker
+    local sel = btn:CreateTexture(nil, "BACKGROUND")
+    sel:SetAllPoints()
+    sel:SetColorTexture(1, 0.82, 0, 0.2)
+    sel:Hide()
+    btn.selectTex = sel
     return btn
 end
 
@@ -139,6 +150,7 @@ function WL.PopulateBookList(scrollContent)
         btn:SetSize(contentWidth, height)
         btn:ClearAllPoints()
         btn:SetPoint("TOPLEFT", scrollContent, "TOPLEFT", 0, -y)
+        btn.yTop = y
         btn.titleKey = titleKey
         btn.bookData = WL.db[titleKey]
         btn:Show()
@@ -151,5 +163,76 @@ function WL.PopulateBookList(scrollContent)
         pool[i].titleKey, pool[i].bookData = nil, nil
     end
 
+    listContent, listCount = scrollContent, #titles
+    if selectedIndex > listCount then selectedIndex = listCount end
+    for i, btn in ipairs(pool) do
+        btn.selectTex:SetShown(i == selectedIndex)
+    end
+
     scrollContent:SetHeight(math.max(y + 10, 440))
+end
+
+-- ---------------------------------------------------------------------------
+-- Gamepad navigation (called from Library.Frame.lua)
+-- ---------------------------------------------------------------------------
+
+-- Scrolls just enough to keep the selected entry in view
+local function ScrollToSelection()
+    local btn = listContent and listContent.buttons and listContent.buttons[selectedIndex]
+    if not btn or not btn.yTop then return end
+
+    local scroll = listContent:GetParent()
+    local top, bottom = btn.yTop, btn.yTop + btn:GetHeight()
+    local current, view = scroll:GetVerticalScroll(), scroll:GetHeight()
+
+    local target = current
+    if top - 4 < current then
+        target = top - 4
+    elseif bottom + 4 > current + view then
+        target = bottom + 4 - view
+    end
+    scroll:SetVerticalScroll(math.max(0, math.min(target, scroll:GetVerticalScrollRange())))
+end
+
+function WL.MoveListSelection(delta)
+    if listCount == 0 then return end
+    local new = selectedIndex + delta
+    if selectedIndex == 0 then new = (delta > 0) and 1 or listCount end
+    selectedIndex = math.max(1, math.min(new, listCount))
+
+    for i, btn in ipairs(listContent.buttons) do
+        btn.selectTex:SetShown(i == selectedIndex)
+    end
+    ScrollToSelection()
+end
+
+local function GetSelectedButton()
+    local btn = listContent and listContent.buttons and listContent.buttons[selectedIndex]
+    if btn and btn.titleKey then return btn end
+end
+
+function WL.OpenSelectedBook()
+    local btn = GetSelectedButton()
+    if btn then WL.OpenBook(btn.titleKey, btn.bookData) end
+end
+
+function WL.OpenSelectedBookMenu()
+    local btn = GetSelectedButton()
+    if btn then ShowBookContextMenu(btn, btn.titleKey, btn.bookData) end
+end
+
+-- Steps the category filter through All, then each category (wraps around)
+function WL.CycleCategory(step)
+    local list = { WL.ALL_CATEGORIES }
+    for _, cat in ipairs(WL.GetCategories()) do list[#list + 1] = cat end
+
+    local index = 1
+    for i, cat in ipairs(list) do
+        if cat == WL.state.selectedCategory then index = i break end
+    end
+    index = (index - 1 + step) % #list + 1
+
+    WL.state.selectedCategory = list[index]
+    selectedIndex = 0
+    WL.NotifyCategoriesChanged()   -- updates the label and refreshes the list
 end
