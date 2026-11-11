@@ -1,0 +1,8 @@
+## Interface: 16001
+## Title: Missing Well Fed Reminder
+## Notes: Displays a visual warning when the Well Fed buff is missing.
+## Author: Custom
+## Version: 1.0.0
+## SavedVariables: MissingWellFedDB
+
+MissingWellFed.lua
